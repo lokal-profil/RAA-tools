@@ -1,5 +1,5 @@
 application: lokal-profil
-version: 1
+version: 2-test
 runtime: python27
 api_version: 1
 threadsafe: true
@@ -13,6 +13,9 @@ handlers:
 
 - url: /fmis/.*
   script: Fornminne.app
+
+- url: /autotest/.*
+  script: Autouploadtest.app
 
 - url: /favicon\.ico
   static_files: static/images/favicon.ico

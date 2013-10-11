@@ -4,12 +4,18 @@
 ##creator templats
 ##keep a record of id, author
 ##
+from __future__ import with_statement
+from google.appengine.api import files
+from google.appengine.ext import blobstore
+from poster.encode import multipart_encode
 import cgi
 import webapp2
 import urllib2, urllib
 from urllib2 import URLError, HTTPError
 from httplib import HTTPException
 from xml.dom.minidom import parse
+from cookielib import CookieJar
+
 #
 class MainPage(webapp2.RequestHandler):
     def get(self):
@@ -47,7 +53,7 @@ class KMB(webapp2.RequestHandler):
             self.redirect('/kmb/?' + Format.urlencode({'ID': ID, 'reason': u'Sorry men %s är inte ett 14-siffrigt nummer. Försök igen.' % ID}), abort=True)
         try:
             fil = urllib2.urlopen('http://kulturarvsdata.se/raa/kmb/'+ID)
-        except HTTPError as e:
+        except HTTPError, e:
             run = False
             self.response.out.write(Format.header(u'Problem med KMB id: %s' %ID))
             self.response.out.write(u'Servern hos kulturarvsdata.se kunde tyvärr inte leverera datan. Säker på att du angivit rätt id?<br/>')
@@ -59,7 +65,7 @@ class KMB(webapp2.RequestHandler):
             self.response.out.write(u'Servern hos kulturarvsdata.se kunde tyvärr inte leverera datan. <br/>')
             self.response.out.write(cgi.escape(str(e)))
             self.response.out.write(Format.footer())
-        except URLError as e:
+        except URLError, e:
             run = False
             self.response.out.write(Format.header(u'Problem med KMB id: %s' %ID))
             self.response.out.write(cgi.escape(e.reason[0]))
@@ -81,11 +87,20 @@ class KMB(webapp2.RequestHandler):
         if run:
             #produce template
             template = KMB.createTemplate(A)
+            #produce page
             self.response.out.write('<img src="%s" alt="preview"/><br/>' % A['thumbnail'])
-            self.response.out.write('Download the (non-thumbnail) image from <a href="'+A['source']+'" target="_blank">here</a><br/>')
-            #produce template
-            self.response.out.write(u'''The following is automagically copied into the image description on
-<a href="https://commons.wikimedia.org/w/index.php?title=Special:Upload&uploadformstyle=basic&wpDestFile=%s - kmb.%s.jpg&wpUploadDescription=%s" target="_blank">the upload page</a>:<br/><pre>''' % (A['namn'], A['ID'], urllib.quote(template.encode("utf-8"))))
+            self.response.out.write(u'''
+              <form action="AutoUpload" method="post">
+                <input type="hidden" name="ID" value="%s">
+                <input type="hidden" name="filename" value="%s - kmb.%s.jpg">
+                <input type="hidden" name="desc" value="%s">
+                <input type="hidden" name="url" value="%s">
+                <div><input type="submit" value="Try Auto Upload"></div>
+              </form>''' % (A['ID'], A['namn'], A['ID'], template, A['source']))
+            self.response.out.write('or download the full-size image from <a href="'+A['source']+'" target="_blank">here</a> ')
+            #generate link to upload
+            self.response.out.write(u'''and following is automagically copied into the image description on <a href="https://test.wikipedia.org/w/index.php?title=Special:Upload&uploadformstyle=basic&wpDestFile=%s - kmb.%s.jpg&wpUploadDescription=%s" target="_blank">the upload page</a>:<br/><pre>''' % (A['namn'], A['ID'], urllib.quote(template.encode("utf-8"))))
+            #self.response.out.write(u'''and copy the following into the image description on <a href="https://commons.wikimedia.org/w/index.php?title=Special:Upload&uploadformstyle=basic&wpDestFile=%s - kmb.%s.jpg&wpUploadDescription=%s" target="_blank">the upload page</a>:<br/><pre>''' % (A['namn'], A['ID'], urllib.quote(template.encode("utf-8"))))
             self.response.out.write(cgi.escape(template))
             self.response.out.write('</pre>')
             self.response.out.write(Format.footer())
@@ -283,6 +298,190 @@ class KMB(webapp2.RequestHandler):
         return txt
     #
 #
+class AutoUpload(webapp2.RequestHandler):
+    def post(self):
+        ID = self.request.get('ID').strip()
+        filename = self.request.get('filename').strip()
+        desc = self.request.get('desc').strip()
+        fileurl = self.request.get('url').strip()
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(CookieJar())) #for cookiesupport
+        user='<my-user>'
+        passw='<my-password>'
+        wikiurl = u'https://test.wikipedia.org'
+        #wikiurl = u'https://commons.wikimedia.org'
+        apiurl = '%s/w/api.php' %wikiurl
+        (token, error) = AutoUpload.login(apiurl, user, passw, opener)
+        if(token==None):
+            self.response.out.write(Format.header(u'Problem med AutoUpload för KMB id: %s' %ID))
+            self.response.out.write('Login error: %s' %error)
+            self.response.out.write(Format.footer())
+        else:
+            (blob_key, error) = AutoUpload.fileToBlob(fileurl, filename) #store file as blob in blobstore
+            if(blob_key==None):
+                self.response.out.write(Format.header(u'Problem med AutoUpload för KMB id: %s' %ID))
+                self.response.out.write('File download error: %s' %error)
+                self.response.out.write(Format.footer())
+            else:
+                ffile = blobstore.BlobReader(blob_key)     # Open the blob as a file-like object
+                comment = 'API testing'
+                #comment = 'KMB upload using tool at lokal-profil.appspot.com/kmb/'
+                (success, error) = AutoUpload.upload4(apiurl, filename, ffile, opener, token, desc=desc, comment=comment)
+                if success:
+                    self.response.out.write(Format.header(u'AutoUpload för KMB id: %s' %ID))
+                    self.response.out.write('Success! View the file at  <a href="%s/wiki/File:%s" target="_blank">%s</a><br/>' %(wikiurl,filename,filename))
+                else:
+                    self.response.out.write(Format.header(u'Problem med AutoUpload för KMB id: %s' %ID))
+                    self.response.out.write('AutoUpload failed!<br/>%s<br/>To go back to previous page click <a href="/kmb/result?ID=%s">here</a>.' %(error, ID))
+                self.response.out.write(Format.footer())
+                #and finally delete the blob from the blob store
+                ffile.close()
+                files.delete(files.blobstore.get_file_name(blob_key))
+    #
+    @staticmethod
+    def login(apiurl, user, passw, opener):
+        '''logs in user to commons and returns an edittoken (or None + error message)'''
+        lgname = user
+        lgpassword = passw
+        error=''
+        params = {'action':'login', 'lgname':lgname, 'lgpassword':lgpassword, 'format':'xml'}
+        req = urllib2.Request(apiurl, data=urllib.urlencode(params))
+        response = opener.open(req)
+        dom = parse(response)
+        if(len(dom.getElementsByTagName('error'))>0):
+            error = dom.getElementsByTagName('error')[0].attributes['info'].value
+        else:
+            data = dom.getElementsByTagName('login')[0]
+            if(data.attributes['result'].value == 'NeedToken'):
+                params['lgtoken'] = data.attributes['token'].value
+                req = urllib2.Request(apiurl, data=urllib.urlencode(params))
+                response = opener.open(req)
+                dom = parse(response)
+                if(len(dom.getElementsByTagName('error'))>0):
+                    error = dom.getElementsByTagName('error')[0].attributes['info'].value
+                else:
+                    data = dom.getElementsByTagName('login')[0]
+                    if(not data.attributes['result'].value == 'Success'):
+                        error = data.attributes['result'].value
+            elif(data.attributes['result'].value == 'Success'):
+                pass
+            else:
+                error = data.attributes['result'].value
+        if(error == ''):
+            response = opener.open('%s?action=query&prop=info&intoken=edit&titles=Foo&format=xml' %apiurl)
+            dom = parse(response)
+            data = dom.getElementsByTagName('page')[0]
+            token = data.attributes['edittoken'].value
+            return (token,'')
+        else:
+            return (None, error)
+    #
+    @staticmethod
+    def fileToBlob(fileurl, filename):
+        '''Downloads a file from a url and stores it as a blob. Returns blob_key'''
+        blob_key=None
+        error = ''
+        try:
+            #Get the file
+            imagefile = urllib2.urlopen(fileurl)
+        except HTTPError, e:
+            error = '[httpError] for %s. Felkod: %d<br/>' %(fileurl,e.code)
+        except URLError, e:
+            error = '[urlError] for %s. Fel: %s<br/>' %(fileurl,cgi.escape(e.reason[0]))
+        else:
+            # Create the blobfile
+            file_name = files.blobstore.create(mime_type=imagefile.headers['Content-Type'], _blobinfo_uploaded_filename=filename)
+            # Open the file and write to it
+            with files.open(file_name, 'ab') as f:
+                f.write(imagefile.read())
+            # Finalize the file. Do this before attempting to read it.
+            files.finalize(file_name)
+            # Get the file's blob key
+            blob_key = files.blobstore.get_blob_key(file_name)
+        return (blob_key, error)
+    #
+    @staticmethod
+    def upload(apiurl, filename, desc, fileurl, opener, edittoken):
+        '''uploads (via url) a file to commons'''
+        error=''
+        success = False
+        params = {'action':'upload', 'format':'xml', 'filename':filename, 'text':desc, 'comment':'KMB upload using tool at lokal-profil.appspot.com/kmb/', 'token':edittoken, 'url':fileurl}
+        req = urllib2.Request(apiurl, data=Format.urlencode(params))
+        response = opener.open(req)
+        dom = parse(response)
+        if(len(dom.getElementsByTagName('error'))>0):
+            error = 'File upload error: %s' %dom.getElementsByTagName('error')[0].attributes['info'].value
+        else:
+            data = dom.getElementsByTagName('upload')[0]
+            if(data.attributes['result'].value == 'Success'):
+                success = True
+            elif(data.attributes['result'].value =='Warning'):
+                warning=''
+                data2 = data.getElementsByTagName('warnings')[0]
+                if(len(data2.attributes.values())>0):
+                    warning = data2.attributes.keys()[0]
+                elif(data2.firstChild.localName == u'duplicate'):
+                    warning = 'duplicate of %s' %data2.firstChild.childNodes[0].childNodes[0].toxml()
+                else:
+                    warning = data2.firstChild.localName
+                error = 'File upload warning: %s' %warning
+        return (success, error)
+    @staticmethod
+    def upload4(apiurl, filename, ffile, opener, edittoken, desc=None, comment=''):
+        """Upload a file, requires the "poster" module
+
+        filename - Name of file on wiki
+        desc - the initial page content, if the file doesn't already exist on the wiki
+        comment - The log comment, used as the inital page content if the file doesn't already exist on the wiki and no desc is given
+        fileurl - A URL to get the file from
+        ignorewarnings - Ignore warnings about duplicate files, etc.
+        watch - Add the page to your watchlist
+        edittoken - edittoken for this session
+        opener - urlopener containing cookie etc
+
+        """
+        error=''
+        success = False
+        params = {'action':'upload',
+            'format':'xml',
+            'filename':filename,
+            'text':desc,
+            'comment':comment,
+            'token':edittoken,
+            'file':ffile
+        }
+        (datagen, headers) = multipart_encode(params)
+        encodeddata = ''
+        for singledata in datagen:
+            encodeddata = encodeddata + singledata
+        req = urllib2.Request(apiurl, data=encodeddata, headers=headers)
+        try:
+            response = opener.open(req)
+        except HTTPError, e:
+            error = '%sError (http) contacting api. Felkod: %d<br/>' %(error,e.code)
+        except URLError, e:
+            error = '%sError (url) contacting api. Fel: %s<br/>' %(error,cgi.escape(e.reason[0]))
+        else:
+            dom = parse(response)
+            if(len(dom.getElementsByTagName('error'))>0):
+                error = u'%sFile upload error: %s<br/>' %(error, dom.getElementsByTagName('error')[0].attributes['info'].value)
+            elif(dom.toxml()[:43]=='<?xml version="1.0" ?><!DOCTYPE HTML><html>'):
+                error = '%sFile upload error: Something went very wrong... sorry [html returned instead of xml]<br/>' %error
+            else:
+                data = dom.getElementsByTagName('upload')[0]
+                if(data.attributes['result'].value == 'Success'):
+                    success = True
+                elif(data.attributes['result'].value =='Warning'):
+                    warning=''
+                    data2 = data.getElementsByTagName('warnings')[0]
+                    if(len(data2.attributes.values())>0):
+                        warning = data2.attributes.keys()[0]
+                    elif(data2.firstChild.localName == u'duplicate'):
+                        warning = 'duplicate of %s' %data2.firstChild.childNodes[0].childNodes[0].toxml()
+                    else:
+                        warning = data2.firstChild.localName
+                    error = '%sFile upload warning: %s<br/>' %(error, warning)
+        return (success, error)
+#
 class Format:
     @staticmethod
     def urlencode(aDict):
@@ -318,5 +517,6 @@ class Format:
 #
 
 app = webapp2.WSGIApplication([('/kmb/', MainPage),
-                               ('/kmb/result', KMB)],
+                               ('/kmb/result', KMB),
+                               ('/kmb/AutoUpload', AutoUpload)],
                               debug=True)
