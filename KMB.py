@@ -310,7 +310,8 @@ class Format:
     def footer():
         txt = '''
               <hr>
-              <small>If you have any problems or questions please contact <a href="https://sv.wikipedia.org/wiki/Anv%C3%A4ndardiskussion:Lokal_Profil" target="_blank">Lokal_Profil</a></small>.
+                <small>If you have any problems or questions please contact <a href="https://sv.wikipedia.org/wiki/Anv%C3%A4ndardiskussion:Lokal_Profil" target="_blank">Lokal_Profil</a>.</small><br/>
+                <small>Source code <a href="https://github.com/lokal-profil/RAA-tools">at Github</a>.</small>
             </body>
           </html>'''
         return txt
