@@ -272,6 +272,7 @@ class KMB(webapp2.RequestHandler):
         if ('latitude' in A.keys()) and (len(A['latitude'])>0):
             txt += u'{{Object location dec|%s|%s}}\n' % (A['latitude'],A['longitude'])
         txt += u' \n'
+        txt += u'[[Category:Uploaded with KMB tool]]\n'
         txt += u'{{safesubst:User:Lokal_Profil/nycklar/creators|%s|c}}\n' % A['byline']
         if A['fmis']:
             txt += u'[[Category:Archaeological monuments in %s]]\n' % A['landskap']
