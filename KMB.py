@@ -83,11 +83,11 @@ class KMB(webapp2.RequestHandler):
             template = KMB.createTemplate(A)
             self.response.out.write('<img src="%s" alt="preview"/><br/>' % A['thumbnail'])
             destFile = u'%s - kmb.%s.jpg' % (A['namn'], A['ID'])
-            magnusurl = u'//tools.wmflabs.org/url2commons/index.html?urls=%s %s|%s&desc=$DESCRIPTOR$' % (A['source'], destFile, urllib.quote(template.encode("utf-8")))
-            self.response.out.write(u'Upload the image directly as "<a href="%s" target="_blank">%s</a>".' % (magnusurl ,destFile))
+            magnusurl = u'//tools.wmflabs.org/url2commons/index.html?urls=%s %s|%s&desc=$DESCRIPTOR$&run=1' % (A['source'], destFile, urllib.quote(template.replace('\n','$NL$').encode("utf-8")))
+            self.response.out.write(u'<a href="%s" target="_blank"><button>Upload the image directly as "%s"</button></a><br />' % (magnusurl ,destFile))
             #self.response.out.write('Download the (non-thumbnail) image from <a href="'+A['source']+'" target="_blank">here</a><br/>')
             #produce template
-            self.response.out.write(u'The following is automagically copied into the image description:<br/><pre>' % (A['namn'], A['ID'], urllib.quote(template.encode("utf-8"))))
+            self.response.out.write(u'The following is automagically copied into the image description:<br/><pre>')
             self.response.out.write(cgi.escape(template))
             self.response.out.write('</pre>')
             self.response.out.write(Format.footer())
@@ -270,8 +270,8 @@ class KMB(webapp2.RequestHandler):
         txt += u'|notes = \n'
         txt += u'}}\n'
         if ('latitude' in A.keys()) and (len(A['latitude'])>0):
-            txt += u'{{Object location dec|%s|%s}}' % (A['latitude'],A['longitude'])
-        txt += u'\n\n'
+            txt += u'{{Object location dec|%s|%s}}\n' % (A['latitude'],A['longitude'])
+        txt += u' \n'
         txt += u'{{safesubst:User:Lokal_Profil/nycklar/creators|%s|c}}\n' % A['byline']
         if A['fmis']:
             txt += u'[[Category:Archaeological monuments in %s]]\n' % A['landskap']
