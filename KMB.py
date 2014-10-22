@@ -82,10 +82,12 @@ class KMB(webapp2.RequestHandler):
             #produce template
             template = KMB.createTemplate(A)
             self.response.out.write('<img src="%s" alt="preview"/><br/>' % A['thumbnail'])
-            self.response.out.write('Download the (non-thumbnail) image from <a href="'+A['source']+'" target="_blank">here</a><br/>')
+            destFile = u'%s - kmb.%s.jpg' % (A['namn'], A['ID'])
+            magnusurl = u'//tools.wmflabs.org/url2commons/index.html?urls=%s %s|%s&desc=$DESCRIPTOR$' % (A['source'], destFile, urllib.quote(template.encode("utf-8")))
+            self.response.out.write(u'Upload the image directly as "<a href="%s" target="_blank">%s</a>".' % (magnusurl ,destFile))
+            #self.response.out.write('Download the (non-thumbnail) image from <a href="'+A['source']+'" target="_blank">here</a><br/>')
             #produce template
-            self.response.out.write(u'''The following is automagically copied into the image description on
-<a href="https://commons.wikimedia.org/w/index.php?title=Special:Upload&uploadformstyle=basic&wpDestFile=%s - kmb.%s.jpg&wpUploadDescription=%s" target="_blank">the upload page</a>:<br/><pre>''' % (A['namn'], A['ID'], urllib.quote(template.encode("utf-8"))))
+            self.response.out.write(u'The following is automagically copied into the image description:<br/><pre>' % (A['namn'], A['ID'], urllib.quote(template.encode("utf-8"))))
             self.response.out.write(cgi.escape(template))
             self.response.out.write('</pre>')
             self.response.out.write(Format.footer())
