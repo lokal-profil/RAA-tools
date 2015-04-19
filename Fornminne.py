@@ -38,6 +38,9 @@ class MainPage(webapp2.RequestHandler):
 
 class Fornminne(webapp2.RequestHandler):
     def post(self):
+        objektid = self.request.get('objektid').strip()
+        self.redirect('/fmis/result?' + urllib.urlencode({'objektid': objektid}), abort=True)
+    def get(self):
         run = True                                                           #toggle for stopping processing in case of no contact with kulturarvsdata.se
         getXML = False
         objektid = self.request.get('objektid').strip()
