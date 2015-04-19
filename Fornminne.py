@@ -1,10 +1,10 @@
-# -*- coding: ISO-8859-1  -*-
+# -*- coding: UTF-8  -*-
 ##
 ##Framtida forbattringar
 ##fraga om sidnamn ->mojligen flytta titel till alt_namn och ha PAGENAME som titel
 ##skapa lank till sida/pop-up
 ##beklaga klipp o klistra, skyll pa https://bugzilla.wikimedia.org/show_bug.cgi?id=12853
-##Rundata i datastore, med cron-jobb som kollar om wikisidan har updaterats, och i så fall updaterar datastore (samma med signum)
+##Rundata i datastore, med cron-jobb som kollar om wikisidan har updaterats, och i sÃ¥ fall updaterar datastore (samma med signum)
 ##Could possibly display thumbs
 ##
 import cgi
@@ -28,10 +28,10 @@ class MainPage(webapp2.RequestHandler):
                 <div><input type="submit" value="Ange objektid"></div>
               </form>''' % objektid)
         self.response.out.write(u'''
-              <i>För att hitta objektid är den enklaste metoden att via Fornsök navigera till objektets sida. I beskrivningen finns posten "Visa i Google Earth".<br/>
-                 Högerklicka på länken intill och kopiera denna. Den kopierade texten innehåller "objektid=" följt av det 14-siffriga nummer som behövs.
+              <i>FÃ¶r att hitta objektid Ã¤r den enklaste metoden att via FornsÃ¶k navigera till objektets sida. I beskrivningen finns posten "Visa i Google Earth".<br/>
+                 HÃ¶gerklicka pÃ¥ lÃ¤nken intill och kopiera denna. Den kopierade texten innehÃ¥ller "objektid=" fÃ¶ljt av det 14-siffriga nummer som behÃ¶vs.
                  <br/><br/>
-                 Notera att det nummer som ibland anges i Fornsöks-url:en för objektsidan inte nödvändigtvis är rätt nummer.
+                 Notera att det nummer som ibland anges i FornsÃ¶ks-url:en fÃ¶r objektsidan inte nÃ¶dvÃ¤ndigtvis Ã¤r rÃ¤tt nummer.
               </i>''')
         self.response.out.write(Format.footer())
 
@@ -44,7 +44,7 @@ class Fornminne(webapp2.RequestHandler):
         RAA = {'objektid' : objektid}                                        #dictionary of values aquired from objektid only
         runDict = {'results' : False}                                        #dictionary for rune related objekts
         if (not len(objektid) == 14) or (not objektid.isdigit()): #invalid
-            self.redirect('/fmis/?' + Format.urlencode({'objektid': objektid, 'reason': u'Sorry men %s är inte ett 14-siffrigt nummer. Försök igen.' % objektid}), abort=True)
+            self.redirect('/fmis/?' + Format.urlencode({'objektid': objektid, 'reason': u'Sorry men %s Ã¤r inte ett 14-siffrigt nummer. FÃ¶rsÃ¶k igen.' % objektid}), abort=True)
         #read in any variables which might have been passed from a previous objektid query
         varList = ['namn','typ','raa-nr','landskap','lan','lanName','kommun','kommunName','socken','sockenName','latitude','longitude','bild','bildCommons','commonsPics']
         for v in varList:
@@ -59,7 +59,7 @@ class Fornminne(webapp2.RequestHandler):
             except HTTPError, e:
                 run = False
                 self.response.out.write(Format.header(u'Problem med FMIS objektid: %s' %objektid))
-                self.response.out.write(u'Servern hos kulturarvsdata.se kunde tyvärr inte leverera datan. Säker på att du angivit rätt objektid?<br/>')
+                self.response.out.write(u'Servern hos kulturarvsdata.se kunde tyvÃ¤rr inte leverera datan. SÃ¤ker pÃ¥ att du angivit rÃ¤tt objektid?<br/>')
                 self.response.out.write(u'Felkod: %d' % e.code)
                 self.response.out.write(Format.footer())
             except URLError, e:
@@ -91,8 +91,8 @@ class Fornminne(webapp2.RequestHandler):
                         self.response.out.write(cgi.escape(u'*"%s" with value <%s>' % (RAA['problem'][0],RAA['problem'][1]))+'<br/>')
                         self.response.out.write(Format.footer())
         if run:
-            self.response.out.write(Format.header(u'Resultat för FMIS objektid: %s' %objektid))
-            self.response.out.write(u'Objektid: <a href="http://kulturarvsdata.se/raa/fmi/html/%s" target="_blank">%s</a> <-- Länk till Fornsök där "undertyp" samt "höjdläge" kan läsas av.<br/>' %(cgi.escape(objektid),cgi.escape(objektid)))
+            self.response.out.write(Format.header(u'Resultat fÃ¶r FMIS objektid: %s' %objektid))
+            self.response.out.write(u'Objektid: <a href="http://kulturarvsdata.se/raa/fmi/html/%s" target="_blank">%s</a> <-- LÃ¤nk till FornsÃ¶k dÃ¤r "undertyp" samt "hÃ¶jdlÃ¤ge" kan lÃ¤sas av.<br/>' %(cgi.escape(objektid),cgi.escape(objektid)))
             #deal with special case of Runristning
             if RAA['typ'] == 'Runristning':
                 signum = self.request.get('signum').strip()
@@ -113,33 +113,33 @@ class Fornminne(webapp2.RequestHandler):
                 #prompt for a changed/trimmed/added signum
                 self.response.out.write(u'''
                               <form action="/fmis/result?%s" method="post">
-		                <input value="%s" name="signum"><input type="submit" value="ändra signum?">
+		                <input value="%s" name="signum"><input type="submit" value="Ã¤ndra signum?">
 		              </form><br/>''' % (Format.urlencode(RAA),runDict['signum']) )
             #Some image suggestions
             if (len(RAA['bild'])>0) or (int(RAA['commonsPics'])>0) or ('runBild' in runDict.keys() and len(runDict['runBild'])>0):
                 kmbString = 'http://kulturarvsdata.se/raa/kmb/html/'
-                self.response.out.write(u'Några bildförslag:<br/>')
+                self.response.out.write(u'NÃ¥gra bildfÃ¶rslag:<br/>')
                 if int(RAA['commonsPics'])>0:
-                    self.response.out.write(u'<a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">Commons sökning</a> (minst %d bilder)<br/>' % (objektid, int(RAA['commonsPics'])) )
+                    self.response.out.write(u'<a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">Commons sÃ¶kning</a> (minst %d bilder)<br/>' % (objektid, int(RAA['commonsPics'])) )
                 if 'bild' in RAA.keys():
                     for bild in RAA['bild']:
-                        self.response.out.write(u'*<a href="%s" target="_blank">Från FMIS</a>' % bild)
+                        self.response.out.write(u'*<a href="%s" target="_blank">FrÃ¥n FMIS</a>' % bild)
                         if bild.startswith(kmbString):
                             self.response.out.write(u' <small>(<a href="/kmb/result?ID=%s" target="_blank">Ladda upp till Commons?</a>)</small>' % bild[len(kmbString):])
                         self.response.out.write(u'<br/>')
                 if runDict['results'] and (len(runDict['runBild'])>0):
                     for b in runDict['runBild']:
-                        if b.startswith(u'{{KMB-länk|'):
-                            b = 'http://kulturarvsdata.se/raa/kmb/html/'+b[len(u'{{KMB-länk|'):].strip('}}')
-                        elif b.startswith(u'{{SHM-länk|bild|'):
-                            b = 'http://http://kulturarvsdata.se/shm/media/html/'+b[len(u'{{SHM-länk|bild|'):].strip('}}')
+                        if b.startswith(u'{{KMB-lÃ¤nk|'):
+                            b = 'http://kulturarvsdata.se/raa/kmb/html/'+b[len(u'{{KMB-lÃ¤nk|'):].strip('}}')
+                        elif b.startswith(u'{{SHM-lÃ¤nk|bild|'):
+                            b = 'http://http://kulturarvsdata.se/shm/media/html/'+b[len(u'{{SHM-lÃ¤nk|bild|'):].strip('}}')
                         if not b in RAA['bild']:                          #No need to output same again
-                            self.response.out.write(u'*<a href="%s" target="_blank">Från SRDB</a>' % b)
+                            self.response.out.write(u'*<a href="%s" target="_blank">FrÃ¥n SRDB</a>' % b)
                             if b.startswith(kmbString):
                                 self.response.out.write(u' <small>(<a href="/kmb/result?ID=%s" target="_blank">Ladda upp till Commons?</a>)</small>' % b[len(kmbString):])
                             self.response.out.write(u'<br/>')
             #Start writing template
-            self.response.out.write(u'Kopiera in följande i artikeln:<br/><pre>')
+            self.response.out.write(u'Kopiera in fÃ¶ljande i artikeln:<br/><pre>')
             self.response.out.write(cgi.escape(Fornminne.createTemplate(RAA, runDict)))
             self.response.out.write('</pre>')
             self.response.out.write(Format.footer())
@@ -195,7 +195,7 @@ class Fornminne(webapp2.RequestHandler):
         xmlTag = dom.getElementsByTagName('rdf:Description')
         for x in xmlTag:
             if len(x.getElementsByTagName('ns5:type'))>0:
-                    if x.getElementsByTagName('ns5:type')[0].childNodes[0].data.strip() == u'Antikvarisk bedömning':
+                    if x.getElementsByTagName('ns5:type')[0].childNodes[0].data.strip() == u'Antikvarisk bedÃ¶mning':
                             RAA['skydd'] = x.getElementsByTagName('ns5:spec')[0].childNodes[0].data.strip()
     #
     @staticmethod
@@ -208,10 +208,10 @@ class Fornminne(webapp2.RequestHandler):
         try:
             fil = urllib2.urlopen(filename)
         except HTTPError, e:
-            runDict['problem'] = (u'signum-problem: httpError för %s' % filename, u'Felkod: %d' % e.code)
+            runDict['problem'] = (u'signum-problem: httpError fÃ¶r %s' % filename, u'Felkod: %d' % e.code)
             return None
         except URLError, e:
-            runDict['problem'] = (u'signum-problem: urlError för %s' % filename, cgi.escape(e.reason[0]))
+            runDict['problem'] = (u'signum-problem: urlError fÃ¶r %s' % filename, cgi.escape(e.reason[0]))
             return None
         else:
             dom = parse(fil)
@@ -243,10 +243,10 @@ class Fornminne(webapp2.RequestHandler):
         try:
             fil = urllib2.urlopen(filename)
         except HTTPError, e:
-            runDict['problem'] = (u'SRDB-problem: httpError för %s' % filename, u'Felkod: %d' % e.code)
+            runDict['problem'] = (u'SRDB-problem: httpError fÃ¶r %s' % filename, u'Felkod: %d' % e.code)
             return None
         except URLError, e:
-            runDict['problem'] = (u'SRDB-problem: urlError för %s' % filename, cgi.escape(e.reason[0]))
+            runDict['problem'] = (u'SRDB-problem: urlError fÃ¶r %s' % filename, cgi.escape(e.reason[0]))
             return None
         else:
             dom = parse(fil)
@@ -309,31 +309,31 @@ class Fornminne(webapp2.RequestHandler):
                         runDict['runDatering'] = runDict['runDatering'][:pos]+' slutet av '+runDict['runDatering'][pos+3:]
                     while ' b ' in runDict['runDatering']:
                         pos = runDict['runDatering'].find(' b ')
-                        runDict['runDatering'] = runDict['runDatering'][:pos]+u' början av '+runDict['runDatering'][pos+3:]
+                        runDict['runDatering'] = runDict['runDatering'][:pos]+u' bÃ¶rjan av '+runDict['runDatering'][pos+3:]
             else:                           #if no match found
                 runDict['results'] = False
                 return
     #
     @staticmethod
     def commonsPics(RAA):
-        u'''kollar om det finns uppmärkta bilder på Commons'''
+        u'''kollar om det finns uppmÃ¤rkta bilder pÃ¥ Commons'''
         filename = u'https://commons.wikimedia.org/w/api.php?action=query&list=exturlusage&format=xml&euprop=title&euquery=kulturarvsdata.se/raa/fmi/html/%s&eunamespace=6&euoffset=0&eulimit=5' % RAA['objektid']
         try:
             fil = urllib2.urlopen(filename)
         except HTTPError, e:
-            RAA['problem'] = (u'commons-problem: httpError för %s' % filename, u'Felkod: %d' % e.code)
+            RAA['problem'] = (u'commons-problem: httpError fÃ¶r %s' % filename, u'Felkod: %d' % e.code)
             return None
         except URLError, e:
-            RAA['problem'] = (u'commons-problem: urlError för %s' % filename, cgi.escape(e.reason[0]))
+            RAA['problem'] = (u'commons-problem: urlError fÃ¶r %s' % filename, cgi.escape(e.reason[0]))
             return None
         else:
             dom = parse(fil)
             fil.close()
             del fil
             items = dom.getElementsByTagName('eu')
-            #antal träffar
+            #antal trÃ¤ffar
             num = len(items)
-            if not num == 0:                   #finns det några alls? 
+            if not num == 0:                   #finns det nÃ¥gra alls? 
                 RAA['bildCommons'] = items[0].attributes['title'].value[5:]
             return num
     #
@@ -353,19 +353,19 @@ class Fornminne(webapp2.RequestHandler):
             txt += u' | alternativt_namn = %s\n' % RAA['alt_namn']
         txt += u'<!-- Geo -->\n'
         txt += u' | land        = [[Sverige]]\n'
-        txt += u' | landskap    = [[{{safesubst:Användare:Lokal Profil/nycklar/landskap|%s}}]]\n' % RAA['landskap']
-        txt += u' | län         = [[{{safesubst:Användare:Lokal Profil/nycklar/län|%s}}|%s]]\n' %(RAA['lan'],RAA['lanName'])
-        txt += u' | kommun      = [[{{safesubst:Användare:Lokal Profil/nycklar/kommuner|%s}}|%s]]\n' %(RAA['kommun'],RAA['kommunName'])
-        txt += u' | socken      = [[{{safesubst:Användare:Lokal Profil/nycklar/socknar|%s}}|%s]] <!--ATA %s-->\n' %(RAA['socken'], RAA['sockenName'], RAA['socken'])
+        txt += u' | landskap    = [[{{safesubst:AnvÃ¤ndare:Lokal Profil/nycklar/landskap|%s}}]]\n' % RAA['landskap']
+        txt += u' | lÃ¤n         = [[{{safesubst:AnvÃ¤ndare:Lokal Profil/nycklar/lÃ¤n|%s}}|%s]]\n' %(RAA['lan'],RAA['lanName'])
+        txt += u' | kommun      = [[{{safesubst:AnvÃ¤ndare:Lokal Profil/nycklar/kommuner|%s}}|%s]]\n' %(RAA['kommun'],RAA['kommunName'])
+        txt += u' | socken      = [[{{safesubst:AnvÃ¤ndare:Lokal Profil/nycklar/socknar|%s}}|%s]] <!--ATA %s-->\n' %(RAA['socken'], RAA['sockenName'], RAA['socken'])
         txt += u' | plats       = '
         if runDict['results']:
             txt += runDict['runPlats']
         txt += u'\n'
         txt += u' | coord       = '
         if ('latitude' in RAA.keys()) and (len(RAA['latitude'])>0):
-            txt += u'{{coord|%s|%s|display=inline,title|type:landmark}}' % (RAA['latitude'], RAA['longitude'])
+            txt += u'{{coord|%s|%s|display=inline,title|region:SE_type:landmark}}' % (RAA['latitude'], RAA['longitude'])
         txt +=u'\n'
-        txt += u' | höjdläge    = \n'
+        txt += u' | hÃ¶jdlÃ¤ge    = \n'
         if runDict['results']:
             txt += u' | nu_plats    = %s\n' % runDict['runPlacering']
         if RAA['typ'] == 'Runristning':
@@ -381,18 +381,18 @@ class Fornminne(webapp2.RequestHandler):
                 txt += u' | ristare     = \n'
                 txt += u' | runstil     = \n'
             txt += u' | rungrupp    = \n'
-        txt += u'<!-- Allmän info -->\n'
+        txt += u'<!-- AllmÃ¤n info -->\n'
         txt += u' | tillkomsttid= '
         if runDict['results']:
             txt += runDict['runDatering']
         txt += u'\n'
         txt += u' | antal       = \n'
         txt += u' | del_av      = \n'
-        txt += u' | innehåller  = \n'
+        txt += u' | innehÃ¥ller  = \n'
         txt += u'<!-- Skyddsinfo -->\n'
         txt += u' | skydd       = %s\n' % RAA['skydd']
-        txt += u' | skydd_nr    = {{RAÄ-nummer|%s|%s}}\n' % (RAA['raa-nr'], RAA['objektid'])
-        txt += u' | fotnoter    = Information från [[FMIS]]'
+        txt += u' | skydd_nr    = {{RAÃ„-nummer|%s|%s}}\n' % (RAA['raa-nr'], RAA['objektid'])
+        txt += u' | fotnoter    = Information frÃ¥n [[FMIS]]'
         if runDict['results']:
             txt += u' samt [http://www.nordiska.uu.se/forskn/samnord.htm Samnordisk runtextdatabas]'
         txt +=u'.\n'
