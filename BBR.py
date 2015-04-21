@@ -420,7 +420,11 @@ class BBRB(webapp2.RequestHandler):
         ##do skydd/nybbygnad separat
         bbrbDict['skydd'] = []
         bbrbDict['andring'] = []
-        skyddsStart = (u'3 kap. kulturminneslagen',u'4 kap. kulturminneslagen',u'Förordning (1988:1229)',u'Hävt ')
+        skyddsStart = (
+            u'3 kap. kulturminneslagen', u'Byggnadsminne (BM) 3 kap. KML',
+            u'4 kap. kulturminneslagen', u'Kyrkligt kulturminne. 4 kap. KML',
+            u'Förordning (1988:1229)', u'Statligt byggnadsminne (SBM). Förordning (2013:558)',
+            u'Hävt ')
         xmlTag = dom.getElementsByTagName('rdf:Description')
         for x in xmlTag:
             if len(x.getElementsByTagName('ns5:contextLabel'))>0: #if it has a contextLabel
