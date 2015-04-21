@@ -335,8 +335,8 @@ class BBRB(webapp2.RequestHandler):
             self.response.out.write(Format.header(u'Resultat för BBR id: %s' %objektid))
             self.response.out.write(u'Byggnadspresentation hos BBR: <a href="http://kulturarvsdata.se/raa/%s/html/%s" target="_blank">%s</a><br/>' %(path, objektid, objektid))
             if bbrbDict['commonsPics'] >0:
-                self.response.out.write(u'För fler commonsbilder se <a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">här</a> (minst %d bilder).<br/>' % (bbrbDict['id'], int(bbrbDict['commonsPics'])) )
-            self.response.out.write(u'Det kan också finnas bilder uppmärkta med anläggningsid <a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">på Commons</a>.<br/>' % bbrbDict['bbra'][0] )
+                self.response.out.write(u'För fler commonsbilder se <a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=insource:%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">här</a> (minst %d bilder).<br/>' % (bbrbDict['id'], int(bbrbDict['commonsPics'])) )
+            self.response.out.write(u'Det kan också finnas bilder uppmärkta med anläggningsid <a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=insource:%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">på Commons</a>.<br/>' % bbrbDict['bbra'][0] )
             if ('arkitekt' in bbrbDict.keys()) or ('byggherre' in bbrbDict.keys()):
                 self.response.out.write(u'<b>Notera!</b> Enbart den första upphovsmannen (byggherre/arkitekt) kan hittas av detta verktyg.<br/>')
             if 'fardig' in bbrbDict.keys():
