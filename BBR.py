@@ -527,12 +527,12 @@ class BBR():
     @staticmethod
     def skyddmatch(text, bbrDict):
         '''matches the skydd string to a type of skydd'''
-        if text == u'3 kap. kulturminneslagen.  Byggnadsminne':
+        if text == u'3 kap. kulturminneslagen.  Byggnadsminne' or text == u'Byggnadsminne (BM) 3 kap. KML':
             return u'Enskilt byggnadsminne'
-        elif text == u'4 kap. kulturminneslagen.  Kyrkligt kulturminne':
+        elif text == u'4 kap. kulturminneslagen.  Kyrkligt kulturminne' or text == u'Kyrkligt kulturminne. 4 kap. KML':
             bbrDict['kyrka'] = True
             return u'Kyrkligt kulturminne'
-        elif text == u'Förordning (1988:1229) om statligt byggnadsminne m.m.':
+        elif text == u'Förordning (1988:1229) om statligt byggnadsminne m.m.' or text == u'Statligt byggnadsminne (SBM). Förordning (2013:558)':
             return u'Statligt byggnadsminne'
         elif text.startswith(u'Hävt '):
             return 'cancled'
