@@ -123,7 +123,7 @@ class Fornminne(webapp2.RequestHandler):
                 kmbString = 'http://kulturarvsdata.se/raa/kmb/html/'
                 self.response.out.write(u'Några bildförslag:<br/>')
                 if int(RAA['commonsPics'])>0:
-                    self.response.out.write(u'<a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">Commons sökning</a> (minst %d bilder)<br/>' % (objektid, int(RAA['commonsPics'])) )
+                    self.response.out.write(u'<a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=insource:%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">Commons sökning</a> (minst %d bilder)<br/>' % (objektid, int(RAA['commonsPics'])) )
                 if 'bild' in RAA.keys():
                     for bild in RAA['bild']:
                         self.response.out.write(u'*<a href="%s" target="_blank">Från FMIS</a>' % bild)
