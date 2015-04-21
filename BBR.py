@@ -110,11 +110,15 @@ class BBRA(webapp2.RequestHandler):
             #All seems to have worked
             self.response.out.write(Format.header(u'Resultat för BBR id: %s' %objektid))
             self.response.out.write(u'Anläggningspresentation hos BBR: <a href="http://kulturarvsdata.se/raa/%s/html/%s" target="_blank">%s</a><br/>' %(path, objektid, objektid))
-            if bbraDict['commonsPics'] >0:
+            if bbraDict['commonsPics'] > 0:
                 picIds = bbraDict['id']
-                for b in bbraDict['bbrb']:
-                    picIds +=u'+OR+%s' % b[0]
-                self.response.out.write(u'För fler commonsbilder se <a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">här</a> (minst %d bilder)<br/>' % (picIds, int(bbraDict['commonsPics'])) )
+                if len(bbraDict['bbrb']) > 0:
+                    # build a regexp like /(21000001648601|10039701480002)/
+                    picIds = u'/(%s' % picIds
+                    for b in bbraDict['bbrb']:
+                        picIds += u'|%s' % b[0]
+                    picIds += u')/'
+                self.response.out.write(u'För fler commonsbilder se <a href="https://commons.wikimedia.org/w/index.php?title=Special:Search&search=insource:%s&ns0=1&ns6=1&ns14=1&redirs=1" target="_blank">här</a> (minst %d bilder)<br/>' % (picIds, int(bbraDict['commonsPics'])) )
             if len(bbraDict['bbrb'])>1:
                 self.response.out.write(u'<b>Notera!</b> Denna anläggning innehåller %d enskilda byggnader vilket har gjort att information om arkitekt, byggnadsstart etc. inte kunnat hämtas.<br/>Koordinaterna som anges är mittpunkten för anläggningen (viktad för antalet byggnader)<br/>' % len(bbraDict['bbrb']))
             elif len(bbraDict['bbrb'])==0:
